@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NirogAI — AI-Powered Healthcare for Every Indian</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --teal:#0AB5A0;--teal-dark:#089486;--teal-soft:#E8F8F6;--teal-mid:#B2E8E2;
+  --ink:#0D1B1A;--ink-mid:#2D4A47;--ink-mute:#6B8F8C;--ink-faint:#E2EDED;
+  --white:#FFFFFF;--bg:#F4FAF9;
+  --green:#10B981;--yellow:#F59E0B;--red:#EF4444;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--white);color:var(--ink);overflow-x:hidden;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5%;height:68px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--ink-faint);transition:box-shadow .3s;}
+nav.scrolled{box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.nav-logo .dot{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0AB5A0,#089486);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:16px;color:white;box-shadow:0 4px 12px rgba(10,181,160,0.3);}
+.nav-logo span{font-family:'Instrument Serif',serif;font-size:20px;color:var(--ink);letter-spacing:-.3px;}
+.nav-logo span em{color:var(--teal);font-style:italic;}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-links a{font-size:13.5px;color:var(--ink-mid);text-decoration:none;font-weight:500;transition:color .2s;}
+.nav-links a:hover{color:var(--teal);}
+.nav-cta{padding:9px 22px;background:var(--teal);color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:all .2s;box-shadow:0 4px 12px rgba(10,181,160,0.25);}
+.nav-cta:hover{background:var(--teal-dark);transform:translateY(-1px);}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 5% 60px;background:linear-gradient(180deg,var(--teal-soft) 0%,var(--white) 60%);}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:var(--white);border:1.5px solid var(--teal-mid);border-radius:30px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--teal-dark);margin-bottom:28px;box-shadow:0 2px 8px rgba(10,181,160,0.1);animation:fadeDown .6s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.hero-badge .pulse{width:7px;height:7px;background:var(--green);border-radius:50%;animation:beat 2s infinite;}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+.hero h1{font-family:'Instrument Serif',serif;font-size:clamp(38px,6vw,72px);line-height:1.1;letter-spacing:-.5px;color:var(--ink);margin-bottom:24px;animation:riseIn .7s .1s cubic-bezier(.34,1.2,.64,1) both;}
+@keyframes riseIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero h1 em{color:var(--teal);font-style:italic;}
+.hero h1 span{display:block;}
+.hero p{font-size:clamp(15px,2vw,18px);color:var(--ink-mid);line-height:1.7;max-width:560px;margin:0 auto 40px;animation:riseIn .7s .2s cubic-bezier(.34,1.2,.64,1) both;}
+.hero-actions{display:flex;flex-direction:column;align-items:center;gap:16px;animation:riseIn .7s .3s both;}
+.waitlist-form{display:flex;gap:10px;width:100%;max-width:460px;}
+.waitlist-form input{flex:1;padding:14px 18px;border:1.5px solid var(--ink-faint);border-radius:12px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;transition:border-color .2s;background:var(--white);}
+.waitlist-form input:focus{border-color:var(--teal);}
+.waitlist-form input::placeholder{color:var(--ink-mute);}
+.join-btn{padding:14px 24px;background:var(--teal);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;transition:all .2s;box-shadow:0 4px 16px rgba(10,181,160,0.3);}
+.join-btn:hover{background:var(--teal-dark);transform:translateY(-1px);}
+.hero-sub{font-size:12px;color:var(--ink-mute);}
+.hero-sub b{color:var(--teal-dark);}
+.success-msg{display:none;background:var(--teal-soft);border:1.5px solid var(--teal-mid);border-radius:12px;padding:14px 20px;font-size:14px;color:var(--teal-dark);font-weight:600;max-width:460px;width:100%;text-align:center;}
+
+/* HERO VISUAL */
+.hero-visual{margin-top:56px;position:relative;width:100%;max-width:700px;animation:riseIn .8s .4s both;}
+.chat-preview{background:var(--white);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.1),0 4px 16px rgba(10,181,160,0.1);border:1px solid var(--ink-faint);overflow:hidden;}
+.cp-header{background:var(--white);border-bottom:1px solid var(--ink-faint);padding:14px 20px;display:flex;align-items:center;gap:10px;}
+.cp-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0AB5A0,#089486);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:15px;color:white;flex-shrink:0;}
+.cp-name{font-size:13px;font-weight:700;color:var(--ink);}
+.cp-status{font-size:11px;color:var(--green);font-weight:600;}
+.cp-body{padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--bg);}
+.cp-msg{display:flex;gap:8px;align-items:flex-end;}
+.cp-msg.u{flex-direction:row-reverse;}
+.cp-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;max-width:75%;}
+.cp-msg.ai .cp-bubble{background:var(--white);border:1px solid var(--ink-faint);border-radius:4px 12px 12px 12px;color:var(--ink);}
+.cp-msg.u .cp-bubble{background:var(--teal);border-radius:12px 4px 12px 12px;color:white;}
+.cp-risk{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(245,158,11,.1);color:#D97706;border:1px solid rgba(245,158,11,.2);border-radius:16px;font-size:11px;font-weight:600;margin-top:6px;}
+
+/* ── STATS ── */
+.stats{padding:60px 5%;background:var(--white);}
+.stats-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px;background:var(--ink-faint);border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);}
+.stat-item{background:var(--white);padding:28px 24px;text-align:center;}
+.stat-num{font-family:'Instrument Serif',serif;font-size:36px;color:var(--teal);line-height:1;}
+.stat-label{font-size:12.5px;color:var(--ink-mute);margin-top:6px;line-height:1.4;}
+
+/* ── PROBLEM ── */
+.section{padding:80px 5%;}
+.section-inner{max-width:900px;margin:0 auto;}
+.section-tag{display:inline-block;background:var(--teal-soft);color:var(--teal-dark);border:1px solid var(--teal-mid);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;}
+.section h2{font-family:'Instrument Serif',serif;font-size:clamp(28px,4vw,44px);line-height:1.15;letter-spacing:-.3px;color:var(--ink);margin-bottom:16px;}
+.section h2 em{color:var(--teal);font-style:italic;}
+.section>div>p,.section-inner>p{font-size:15px;color:var(--ink-mid);line-height:1.7;max-width:600px;}
+
+.problems-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:40px;}
+.prob-card{background:var(--bg);border:1px solid var(--ink-faint);border-radius:16px;padding:24px;transition:all .2s;}
+.prob-card:hover{border-color:var(--teal-mid);box-shadow:0 4px 20px rgba(10,181,160,0.1);transform:translateY(-2px);}
+.prob-icon{font-size:28px;margin-bottom:12px;}
+.prob-card h3{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.prob-card p{font-size:13px;color:var(--ink-mute);line-height:1.6;}
+
+/* ── FEATURES ── */
+.features-bg{background:var(--bg);}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:40px;}
+.feat-card{background:var(--white);border:1px solid var(--ink-faint);border-radius:20px;padding:28px;transition:all .25s;position:relative;overflow:hidden;}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0AB5A0,#34D399);opacity:0;transition:opacity .25s;}
+.feat-card:hover{box-shadow:0 8px 32px rgba(10,181,160,0.12);transform:translateY(-3px);border-color:var(--teal-mid);}
+.feat-card:hover::before{opacity:1;}
+.feat-icon{width:48px;height:48px;border-radius:12px;background:var(--teal-soft);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
+.feat-card h3{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.feat-card p{font-size:13.5px;color:var(--ink-mute);line-height:1.6;}
+.feat-tag{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;color:var(--teal-dark);background:var(--teal-soft);padding:3px 10px;border-radius:10px;}
+
+/* ── HOW IT WORKS ── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;margin-top:48px;position:relative;}
+.steps::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:2px;background:linear-gradient(90deg,var(--teal-mid),var(--teal));z-index:0;}
+.step{text-align:center;position:relative;z-index:1;padding:0 16px;}
+.step-num{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#0AB5A0,#089486);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:22px;color:white;margin:0 auto 16px;box-shadow:0 4px 16px rgba(10,181,160,0.3);}
+.step h3{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.step p{font-size:12.5px;color:var(--ink-mute);line-height:1.5;}
+
+/* ── DR AANYA SPOTLIGHT ── */
+.aanya-section{background:linear-gradient(135deg,#0AB5A0 0%,#089486 100%);padding:80px 5%;text-align:center;color:white;}
+.aanya-section .section-tag{background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3);}
+.aanya-section h2{font-family:'Instrument Serif',serif;font-size:clamp(28px,4vw,44px);color:white;margin-bottom:16px;}
+.aanya-section p{font-size:15px;color:rgba(255,255,255,0.85);line-height:1.7;max-width:540px;margin:0 auto 40px;}
+.aanya-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:40px;}
+.aanya-pill{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:8px 18px;font-size:13px;color:white;font-weight:500;}
+.try-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:white;color:var(--teal-dark);border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;transition:all .2s;box-shadow:0 4px 16px rgba(0,0,0,0.15);}
+.try-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:40px;max-width:760px;margin-left:auto;margin-right:auto;}
+.price-card{background:var(--white);border:1.5px solid var(--ink-faint);border-radius:20px;padding:28px;text-align:center;transition:all .2s;position:relative;}
+.price-card.featured{border-color:var(--teal);box-shadow:0 8px 32px rgba(10,181,160,0.15);}
+.featured-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--teal);color:white;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;white-space:nowrap;}
+.price-card h3{font-size:15px;font-weight:700;color:var(--ink-mute);margin-bottom:12px;}
+.price-num{font-family:'Instrument Serif',serif;font-size:44px;color:var(--ink);line-height:1;}
+.price-num span{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:500;color:var(--ink-mute);}
+.price-desc{font-size:13px;color:var(--ink-mute);margin:8px 0 20px;}
+.price-features{text-align:left;display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.pf{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-mid);}
+.pf::before{content:'✓';color:var(--teal);font-weight:700;flex-shrink:0;}
+.price-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;border:none;}
+.price-btn.outline{background:var(--bg);color:var(--ink);border:1.5px solid var(--ink-faint);}
+.price-btn.outline:hover{border-color:var(--teal);color:var(--teal);}
+.price-btn.solid{background:var(--teal);color:white;box-shadow:0 4px 12px rgba(10,181,160,0.3);}
+.price-btn.solid:hover{background:var(--teal-dark);}
+
+/* ── WAITLIST FINAL ── */
+.waitlist-final{background:var(--bg);padding:80px 5%;text-align:center;}
+.waitlist-final h2{font-family:'Instrument Serif',serif;font-size:clamp(28px,4vw,44px);color:var(--ink);margin-bottom:12px;}
+.waitlist-final h2 em{color:var(--teal);font-style:italic;}
+.waitlist-final p{font-size:15px;color:var(--ink-mid);margin-bottom:36px;}
+.waitlist-final form{display:flex;gap:10px;max-width:460px;margin:0 auto;}
+.waitlist-final input{flex:1;padding:14px 18px;border:1.5px solid var(--ink-faint);border-radius:12px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);outline:none;transition:border-color .2s;}
+.waitlist-final input:focus{border-color:var(--teal);}
+.waitlist-count{font-size:13px;color:var(--ink-mute);margin-top:16px;}
+.waitlist-count b{color:var(--teal-dark);}
+
+/* ── FOOTER ── */
+footer{background:var(--ink);color:rgba(255,255,255,0.6);padding:32px 5%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;font-size:13px;}
+footer .logo{font-family:'Instrument Serif',serif;font-size:18px;color:white;}
+footer .logo em{color:var(--teal);}
+footer a{color:rgba(255,255,255,0.5);text-decoration:none;transition:color .2s;}
+footer a:hover{color:var(--teal);}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .nav-links{display:none;}
+  .waitlist-form,.waitlist-final form{flex-direction:column;}
+  .steps::before{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <div class="dot">A</div>
+    <span>Nirog<em>AI</em></span>
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a href="/auth" class="nav-cta">Join Waitlist →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="pulse"></span>
+    India's First AI Health Companion — Now in Beta
+  </div>
+  <h1>
+    <span>Healthcare that</span>
+    <em>understands you.</em>
+    <span>Available 24/7.</span>
+  </h1>
+  <p>Meet Dr. Aanya — your AI doctor who listens to your symptoms, assesses risk, guides your diet, and connects you to real doctors. All in one platform built for India.</p>
+  <div class="hero-actions">
+    <div class="waitlist-form">
+      <input type="email" id="heroEmail" placeholder="Enter your email address" />
+      <button class="join-btn" onclick="joinWaitlist('heroEmail','heroSuccess')">Join Waitlist →</button>
+    </div>
+    <div class="success-msg" id="heroSuccess">🎉 You're on the list! We'll notify you when NirogAI launches.</div>
+    <p class="hero-sub"><b>2,400+</b> people already on the waitlist · Free to join · No spam</p>
+  </div>
+
+  <!-- Chat Preview -->
+  <div class="hero-visual">
+    <div class="chat-preview">
+      <div class="cp-header">
+        <div class="cp-av">A</div>
+        <div>
+          <div class="cp-name">Dr. Aanya</div>
+          <div class="cp-status">● Online · AI Health Companion</div>
+        </div>
+      </div>
+      <div class="cp-body">
+        <div class="cp-msg u">
+          <div class="cp-bubble">I have chest pain and difficulty breathing since morning 😟</div>
+        </div>
+        <div class="cp-msg ai">
+          <div class="cp-av" style="width:28px;height:28px;font-size:12px;flex-shrink:0;">A</div>
+          <div class="cp-bubble">
+            I'm sorry to hear that — this sounds serious and needs immediate attention. Chest pain with breathing difficulty can indicate a cardiac or respiratory condition. Please do not wait or ignore this. Go to the nearest emergency room or call 112 right now.
+            <br><br>
+            <span class="cp-risk">🔴 High Risk — Seek immediate care</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num">₹107B</div>
+      <div class="stat-label">India digital health market by 2033</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">1.4B+</div>
+      <div class="stat-label">Indians who need accessible healthcare</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">24/7</div>
+      <div class="stat-label">Dr. Aanya available — no appointments</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">₹99</div>
+      <div class="stat-label">Premium plan — less than a chai per day</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="section" id="problem">
+  <div class="section-inner">
+    <span class="section-tag">THE PROBLEM</span>
+    <h2>India's healthcare is <em>broken.</em></h2>
+    <p>Millions of Indians suffer silently because getting the right healthcare is expensive, slow, and inaccessible.</p>
+    <div class="problems-grid">
+      <div class="prob-card">
+        <div class="prob-icon">⏳</div>
+        <h3>Long appointment waits</h3>
+        <p>Days or weeks to see a specialist. By then, the condition has already worsened.</p>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon">💸</div>
+        <h3>Expensive consultations</h3>
+        <p>₹500–₹2000 per visit. Most Indians skip doctors because of cost.</p>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon">🏜️</div>
+        <h3>No doctors in rural India</h3>
+        <p>600,000+ villages with zero healthcare infrastructure. Zero access.</p>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon">🗂️</div>
+        <h3>Fragmented health data</h3>
+        <p>Reports here, prescriptions there, diet somewhere else. No unified view.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features-bg" id="features">
+  <div class="section-inner">
+    <span class="section-tag">WHAT WE BUILT</span>
+    <h2>Everything your health needs, <em>in one place.</em></h2>
+    <p>NirogAI combines AI intelligence, preventive care, and real doctor access — seamlessly.</p>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">🤖</div>
+        <h3>Dr. Aanya — AI Doctor</h3>
+        <p>Describe your symptoms in plain language. Get instant risk analysis, health guidance, and emergency detection — 24/7.</p>
+        <span class="feat-tag">Core Feature</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🥗</div>
+        <h3>AI Diet & Nutrition</h3>
+        <p>Personalized Indian diet plans based on your health profile. Track calories, BMI, and get meal suggestions daily.</p>
+        <span class="feat-tag">Preventive Health</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📹</div>
+        <h3>Doctor Video Consultation</h3>
+        <p>When AI recommends a doctor, book instantly. Video call with verified doctors starting at just ₹100.</p>
+        <span class="feat-tag">Telemedicine</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>Health Dashboard</h3>
+        <p>Track BP, sugar, weight, and symptoms over time. Your complete health history in one beautiful dashboard.</p>
+        <span class="feat-tag">Health Analytics</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🚨</div>
+        <h3>Emergency Detection</h3>
+        <p>AI detects critical conditions in real time. Activates emergency alerts and guides you to nearest care immediately.</p>
+        <span class="feat-tag">Safety First</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔬</div>
+        <h3>Report Analysis</h3>
+        <p>Upload blood reports, prescriptions, or lab results. AI extracts key insights and flags abnormal values instantly.</p>
+        <span class="feat-tag">AI Diagnostics</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="section-inner">
+    <span class="section-tag">HOW IT WORKS</span>
+    <h2>From symptoms to solution <em>in minutes.</em></h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Describe Symptoms</h3>
+        <p>Tell Dr. Aanya how you feel — in Hindi or English. No forms, just conversation.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>AI Analysis</h3>
+        <p>Dr. Aanya analyzes your symptoms and classifies risk level instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Get Guidance</h3>
+        <p>Receive personalized health advice, diet tips, and home care recommendations.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>See a Doctor</h3>
+        <p>If needed, book a video consultation with a verified doctor in one tap.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DR AANYA SPOTLIGHT -->
+<section class="aanya-section">
+  <span class="section-tag">MEET DR. AANYA</span>
+  <h2>Your doctor who never sleeps.</h2>
+  <p>Dr. Aanya is not just a chatbot. She's an intelligent health companion powered by advanced AI — trained to understand symptoms, detect emergencies, and guide you like a trusted doctor would.</p>
+  <div class="aanya-pills">
+    <span class="aanya-pill">🧠 Symptom Analysis</span>
+    <span class="aanya-pill">⚠️ Risk Classification</span>
+    <span class="aanya-pill">🚨 Emergency Detection</span>
+    <span class="aanya-pill">🔬 Report Analysis</span>
+    <span class="aanya-pill">💬 Hindi & English</span>
+    <span class="aanya-pill">24/7 Available</span>
+  </div>
+  <a href="/auth" class="try-btn">✨ Try Dr. Aanya Free →</a>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-inner" style="text-align:center;">
+    <span class="section-tag">PRICING</span>
+    <h2>Affordable healthcare for <em>every Indian.</em></h2>
+    <p style="margin:0 auto 0;">No hidden charges. Cancel anytime.</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>FREE</h3>
+        <div class="price-num">₹0<span>/mo</span></div>
+        <p class="price-desc">For trying NirogAI</p>
+        <div class="price-features">
+          <div class="pf">10 AI chats per month</div>
+          <div class="pf">Basic health dashboard</div>
+          <div class="pf">BMI & BMR calculator</div>
+          <div class="pf">Emergency detection</div>
+        </div>
+        <button class="price-btn outline" onclick="window.location.href='/auth'">Get Started Free</button>
+      </div>
+      <div class="price-card featured">
+        <div class="featured-badge">⭐ Most Popular</div>
+        <h3>PREMIUM</h3>
+        <div class="price-num">₹99<span>/mo</span></div>
+        <p class="price-desc">For complete health management</p>
+        <div class="price-features">
+          <div class="pf">Unlimited AI chats</div>
+          <div class="pf">Advanced diet planning</div>
+          <div class="pf">Health analytics & graphs</div>
+          <div class="pf">Report upload & analysis</div>
+          <div class="pf">Priority doctor connect</div>
+          <div class="pf">Family health profiles</div>
+        </div>
+        <button class="price-btn solid" onclick="window.location.href='/auth'">Join Waitlist →</button>
+      </div>
+      <div class="price-card">
+        <h3>CONSULTATION</h3>
+        <div class="price-num">₹100<span>/visit</span></div>
+        <p class="price-desc">Real doctor, when you need one</p>
+        <div class="price-features">
+          <div class="pf">Verified MBBS doctors</div>
+          <div class="pf">Video + audio call</div>
+          <div class="pf">Digital prescription</div>
+          <div class="pf">Chat with doctor</div>
+        </div>
+        <button class="price-btn outline" onclick="window.location.href='/auth'">Book a Doctor</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAITLIST FINAL -->
+<section class="waitlist-final" id="waitlist">
+  <h2>Be the first to experience <em>NirogAI.</em></h2>
+  <p>Join 2,400+ Indians already on the waitlist. Early access members get 3 months Premium free.</p>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <div class="waitlist-form" style="max-width:460px;width:100%;">
+      <input type="email" id="waitlistEmail" placeholder="Enter your email address" />
+      <button class="join-btn" onclick="joinWaitlist('waitlistEmail','waitlistSuccess')">Join Free →</button>
+    </div>
+    <div class="success-msg" id="waitlistSuccess" style="max-width:460px;">🎉 You're on the list! Early access members get 3 months Premium free.</div>
+    <p class="waitlist-count"><b>2,400+</b> people waiting · No spam · Unsubscribe anytime</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">Nirog<em>AI</em></div>
+  <div>AI-powered healthcare for every Indian 🇮🇳</div>
+  <div style="display:flex;gap:20px;">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+<script>
+// Nav scroll
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>20);
+});
+
+// Supabase init
+const { createClient } = supabase;
+const sb = createClient('https://snsmcmxxlsolnkeukyog.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuc21jbXh4bHNvbG5rZXVreW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDY1MTEsImV4cCI6MjA4ODEyMjUxMX0.svnnhqmMTdTZOmdr0TcKi3yRi_hdPeyAUYz0sOOExHY');
+
+// Waitlist
+let count = 2400;
+async function joinWaitlist(inputId, successId){
+  const email = document.getElementById(inputId).value.trim();
+  if(!email || !email.includes('@')){
+    document.getElementById(inputId).style.borderColor='var(--red)';
+    setTimeout(()=>document.getElementById(inputId).style.borderColor='',2000);
+    return;
+  }
+  // Get button and show loading
+  const btn = document.getElementById(inputId).closest('.waitlist-form').querySelector('button');
+  const originalText = btn.textContent;
+  btn.textContent = 'Joining...';
+  btn.disabled = true;
+
+  // Save to Supabase waitlist table
+  const { error } = await sb.from('waitlist').insert({ 
+    email: email,
+    joined_at: new Date().toISOString(),
+    source: inputId === 'heroEmail' ? 'hero' : 'bottom'
+  });
+
+  if(error && error.code !== '23505'){
+    // 23505 = duplicate email — still show success
+    console.log('Waitlist error:', error.message);
+  }
+
+  count++;
+  document.getElementById(inputId).style.display='none';
+  btn.style.display='none';
+  const s = document.getElementById(successId);
+  s.style.display='block';
+  // Update counts
+  document.querySelectorAll('.hero-sub b, .waitlist-count b').forEach(el=>{
+    if(el.textContent.includes('+')) el.textContent = count.toLocaleString()+'+';
+  });
+}
+
+// Smooth scroll for nav links
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t) t.scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+
+<a href="/auth" style="position:fixed;bottom:24px;right:24px;background:var(--teal);color:white;padding:14px 22px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 6px 20px rgba(10,181,160,0.4);z-index:99;display:flex;align-items:center;gap:8px;transition:all .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+  🤖 Try Dr. Aanya Free
+</a>
+</body>
+</html>
